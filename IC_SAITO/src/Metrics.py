@@ -20,11 +20,8 @@ def Pws_gs(graph,source,nbEpisode=100):
     return proba_infected
 
 
-def AP(Ds,graph):
+def AP(U_d,DsNodeSet,graph):
     '''Average Precision pour un episode Ds '''
-    pws_gs =Pws_gs(graph,Ds[0][0])
-    U_d = sorted(pws_gs,key=pws_gs.get,reverse=True) # sort par ordre decroissant
-    DsNodeSet = set(csc.nodes_in_Ds(Ds)) # noeuds faisant partie de l'episode d'infection Ds
     ap =0
     for i,node in enumerate(U_d) : 
         if (node in DsNodeSet):
@@ -34,4 +31,15 @@ def AP(Ds,graph):
     return ap
 
 def MAP(graph,D):
-    return np.sum([AP(Ds,graph)for Ds in D])/len(D)
+    D = csc.sortDbySource(D)
+    last_source =None
+    mean_ap = 0
+    for Ds in D: 
+        if Ds[0][0] != last_source: # on actualise les predictions en fonctions de le la source
+            last_source = Ds[0][0]
+            pws_gs =Pws_gs(graph,Ds[0][0])
+            U_d = sorted(pws_gs,key=pws_gs.get,reverse=True) # sort par ordre decroissant
+        DsNodeSet = set(csc.nodes_in_Ds(Ds)) # noeuds faisant partie de l'episode d'infection Ds
+        mean_ap+=AP(U_d,DsNodeSet,graph)
+    
+    return mean_ap/len(D)

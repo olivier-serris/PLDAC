@@ -92,6 +92,10 @@ def nodes_in_D(D):
     return np.unique([n for Ds in D 
                         for nodes in Ds 
                         for n in nodes])
+def sortDbySource(D):
+    'Sort cascades repr by source (first infecteed node)'
+    return sorted(D, key = lambda Ds:Ds[0][0])
+    
 
 def nodes_in_cascades(C):
     return np.fromiter(set().union(*[set(c.keys()) for c in C]),dtype=int)
