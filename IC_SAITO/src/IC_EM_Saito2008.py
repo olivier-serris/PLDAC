@@ -10,41 +10,46 @@ from scipy.sparse import dok_matrix
 
 class IC_EM_Saito2008(BaseEstimator):
     
-    def __init__(self,threshold = 10**(-7)):
+    def __init__(self,nodes=[0],threshold = 10**(-1)):
+        self.nodes = nodes
         self.threshold=threshold
+        self.graph = GGen.RandGraphFromNodes(nodes)
         
     def fit(self,D):
-        nodes = csc.nodes_in_D(D)
-        self.EM_IC(D,nodes)
+        self.EM_IC(D)
+        
+    def set_params(self,nodes,threshold = 10**(-1)):
+        self.threshold=threshold
+        self.nodes = nodes
     
+    def __str__(self):
+        return f'IC_EM_Saito2008_t={self.threshold}'
+        
 ################### EM algorithm ####################
 
-    def EM_IC(self,D,nodes,debug = False):
+    def EM_IC(self,D,debug = False):
         # initalisation
-        g = GGen.RandGraphFromNodes(nodes)    
-        p_sw = None
-        D_plus_id =   {v:{u:self.D_plus_uv_id(D,v,u) for u in nodes} for v in nodes}
-        D_minus_len = {v:{u:self.D_minus_uv_len(D,v,u)for u in nodes} for v in nodes}
-        self.remove_edges(g,nodes,D_plus_id)
+        self.graph = GGen.RandGraphFromNodes(self.nodes)
+
+        D_plus_id =   {(v,u):self.D_plus_uv_id(D,v,u) for u,v in self.graph.keys()}
+        D_minus_len = {(v,u):self.D_minus_uv_len(D,v,u)for u,v in self.graph.keys()}
+        self.remove_edges(self.graph,self.nodes,D_plus_id)
         
         if debug:
             ll = -float("inf") # ll : loglikelyhood
         
         loop = True
         while loop:
-            p_sw = self.Expectation(g,D)
-            next_g = self.Maximisation(g,D_plus_id,D_minus_len,p_sw)
-            
-            loop = Metrics.MSE(g,next_g) > self.threshold
-            g = next_g
-            
+            p_sw = self.Expectation(self.graph,D)
+            next_g = self.Maximisation(self.graph,D_plus_id,D_minus_len,p_sw)
+            loop = Metrics.MSE(self.graph,next_g)  > self.threshold
+            self.graph = next_g
             if debug : 
-                new_ll = self.llikelyhood(g,D)
+                new_ll = self.llikelyhood(self.graph,D)
                 if new_ll < ll : 
                     print(f"Likelyhood Error : descreasing : from {ll} to {new_ll}")
                 ll = new_ll
-        self.graph = g
-        return g
+        return self.graph
 
     def Expectation(self,g,D):
         p_sw = [{n:self.P_sw(g,Ds,n) for n in csc.nodes_in_Ds(Ds)} for Ds in D]
@@ -62,10 +67,13 @@ class IC_EM_Saito2008(BaseEstimator):
     
     def Maximisation_uv(self,g,D_plus_id,Dminus_len,p_sw,u,v):
         '''Calcule les nouveaux paramètre pour l'arete u,v '''
-        if ((len(D_plus_id[u][v])+Dminus_len[u][v]) == 0):
+        D_plus_id_u_v =D_plus_id.get((u,v),[])
+        Dminus_len_u_v =Dminus_len.get((u,v),0)
+        D_plus_u_v_len = len(D_plus_id_u_v)
+        if ((D_plus_u_v_len+Dminus_len_u_v) == 0):
             #raise Exception(f"{u}-{v} Division zero")
             return 0
-        return (1/(len(D_plus_id[u][v])+Dminus_len[u][v])) *np.sum([g[u,v]/p_sw[i][v] for i in D_plus_id[u][v]])
+        return (1/(D_plus_u_v_len + Dminus_len_u_v)) * np.sum([g[u,v]/p_sw[i][v] for i in D_plus_id_u_v])
 
     def P_sw(self,g,Ds,w):
         ''' Likelyhood of the infection of node w given 
@@ -139,7 +147,7 @@ class IC_EM_Saito2008(BaseEstimator):
         '''
         for n1 in nodes : 
             for n2 in nodes : 
-                if len(D_plus[n1][n2]) == 0:
+                if len(D_plus.get((n1,n2),[])) == 0:
                     g[n1,n2] = 0
     
 ################### Scores  ####################
