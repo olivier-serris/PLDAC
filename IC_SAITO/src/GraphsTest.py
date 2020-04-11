@@ -26,7 +26,6 @@ def handmadeGraphTest():
     cascades = csc.genCascades(handmadeGraph,50)
     D = [csc.CascadeToTimeRepr(c) for c in cascades]
 
-    
     models= [IC_EM_Saito2008(),IC_EM_NotContiguous()]
     scores = dict()
     for i,model in enumerate(models):
@@ -56,7 +55,7 @@ def ScoresGraphModels(graphs,graphs_titles,models):
             print(str(model),"fitted")
             scores[t][str(model)] = Metrics.MAP(model.graph,D)
             print(str(model),f"score:{scores[t][str(model)]}")
-            #'''
+            '''
         scores[t]["original"] = Metrics.MAP(g,D)
     
     return pd.DataFrame(scores)
@@ -65,16 +64,21 @@ def ScoresGraphModels(graphs,graphs_titles,models):
 def main():
     print("start")
     #handmadeGraphTest()
-    nbNodes = 50
-    density = 0.07
     
-    scale_free = dok_matrix(nx.to_scipy_sparse_matrix(nx.scale_free_graph(nbNodes)))
-    sparseGraph = dok_matrix(scipy.sparse.random(nbNodes,nbNodes,density=density))
-    graphs = [scale_free,sparseGraph]
+    scale_free = dok_matrix(nx.to_scipy_sparse_matrix(nx.scale_free_graph(100)))
+    sparseGraph = dok_matrix(scipy.sparse.random(30,30,density=0.05))
+    connected_cave_man = dok_matrix(nx.to_scipy_sparse_matrix(nx.connected_caveman_graph(10,5)))
+    bara = dok_matrix(nx.to_scipy_sparse_matrix(nx.barabasi_albert_graph(100,2)))
     
-    graphs_titles = [f"scale_free_{nbNodes}",f"sparseG_{nbNodes}_d : {density}"]
+    graphs = [scale_free,sparseGraph,connected_cave_man,bara]
+    graphs_titles = [f"scale_free_{scale_free.shape}",
+                     f"sparseG_{sparseGraph.shape}",
+                     f"connected_cave_man",
+                     f"barabasi {bara.shape}"]
+    
     models=  [IC_EM_NotContiguous(),IC_EM_Saito2008()]
     df = ScoresGraphModels(graphs,graphs_titles,models)
+    pd.set_option('display.max_columns', len(graphs))
     print(df)
     print("end")
     
