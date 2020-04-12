@@ -9,6 +9,7 @@ import Metrics
 import pandas as pd
 import pprint as pp
 from networkx import nx
+import GraphGen as GGen
 
 
 
@@ -44,9 +45,8 @@ def ScoresGraphModels(graphs,graphs_titles,models):
         scores[t] = dict()
         for model in models: 
             print("for :",t,str(model))
-            
             model.set_params(csc.nodes_in_D(D))
-            
+            #'''
             cross_res = cross_validate(model,D,scoring=CrossVal_MAP)
             scores[t][str(model)] = cross_res['test_score'].mean()
             print(cross_res)
@@ -66,9 +66,15 @@ def main():
     #handmadeGraphTest()
     
     scale_free = dok_matrix(nx.to_scipy_sparse_matrix(nx.scale_free_graph(100)))
+    scale_free = GGen.randomize_edges_values(scale_free)
     sparseGraph = dok_matrix(scipy.sparse.random(30,30,density=0.05))
+    
     connected_cave_man = dok_matrix(nx.to_scipy_sparse_matrix(nx.connected_caveman_graph(10,5)))
-    bara = dok_matrix(nx.to_scipy_sparse_matrix(nx.barabasi_albert_graph(100,2)))
+    connected_cave_man= GGen.randomize_edges_values(connected_cave_man)
+    
+    bara = dok_matrix(nx.to_scipy_sparse_matrix(nx.barabasi_albert_graph(50,2,seed=1)))
+    bara = GGen.randomize_edges_values(bara)
+
     
     graphs = [scale_free,sparseGraph,connected_cave_man,bara]
     graphs_titles = [f"scale_free_{scale_free.shape}",

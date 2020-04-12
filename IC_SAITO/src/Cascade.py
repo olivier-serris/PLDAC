@@ -5,7 +5,6 @@
     --> Cascade filtering
 """
 import numpy as np
-import functools 
 
 def genCascades(graph,nbCascades):
     '''
