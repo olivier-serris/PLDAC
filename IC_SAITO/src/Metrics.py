@@ -3,7 +3,9 @@ import Cascade as csc
 
 def MSE(g1,g2):
     '''calcule la mean square error entre 2 graphes '''
-    assert g1.shape == g2.shape
+    if(g1.shape < g2.shape):
+        g1,g2 = g2,g1
+    g2.resize(g1.shape)
     return np.sum((g1-g2).power(2))
 
 

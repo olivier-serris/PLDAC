@@ -13,7 +13,6 @@ class IC_EM_Saito2008(BaseEstimator):
     def __init__(self,nodes=[0],threshold = 10**(-1)):
         self.nodes = nodes
         self.threshold=threshold
-        self.graph = GGen.RandGraphFromNodes(nodes)
         
     def fit(self,D):
         self.EM_IC(D)
@@ -30,10 +29,9 @@ class IC_EM_Saito2008(BaseEstimator):
     def EM_IC(self,D,debug = False):
         # initalisation
         self.graph = GGen.RandGraphFromNodes(self.nodes)
-
         D_plus_id =   {(v,u):self.D_plus_uv_id(D,v,u) for u,v in self.graph.keys()}
         D_minus_len = {(v,u):self.D_minus_uv_len(D,v,u)for u,v in self.graph.keys()}
-        self.remove_edges(self.graph,self.nodes,D_plus_id)
+        self.remove_edges(self.graph,D_plus_id)
         
         if debug:
             ll = -float("inf") # ll : loglikelyhood
@@ -141,14 +139,13 @@ class IC_EM_Saito2008(BaseEstimator):
     
 ############# Graph Optimisation ######################
 
-    def remove_edges(self,g,nodes,D_plus):
+    def remove_edges(self,g,D_plus):
         ''' Retire en place tous les arêtes (u,v) ou il n'existe pas de cascade ou 
             u précède v. (=>on ne peut rien dire sur les probabilité que u infecte v)
         '''
-        for n1 in nodes : 
-            for n2 in nodes : 
-                if len(D_plus.get((n1,n2),[])) == 0:
-                    g[n1,n2] = 0
+        for (n1,n2) in list(g.keys()):
+            if len(D_plus.get((n1,n2),[])) == 0:
+                g[n1,n2] = 0
     
 ################### Scores  ####################
 
