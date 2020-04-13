@@ -37,4 +37,4 @@ Les longueurs des cascades ont les distributions suivantes : <br>
 
 Courbes de performance selon le % d'infections retirée :
 
-![NotContiguous_MSE](IC_SAITO/data/eval/_IC_EM_NotContiguous_MSE.png) ![NotContiguous_MAP](IC_SAITO/data/eval/_IC_EM_NotContiguous_MAP.png)  ![IC_EM_Saito2008_MSE](IC_SAITO/data/eval/_IC_EM_Saito2008_MSE.png)  ![IC_EM_Saito2008_MAP](IC_SAITO/data/eval/_IC_EM_Saito2008_MAP.png)
+![NotContiguous_MSE](IC_SAITO/data/eval/IC_EM_NotContiguous_MSE.png) ![NotContiguous_MAP](IC_SAITO/data/eval/IC_EM_NotContiguous_MAP.png)  ![IC_EM_Saito2008_MSE](IC_SAITO/data/eval/IC_EM_Saito2008_MSE.png)  ![IC_EM_Saito2008_MAP](IC_SAITO/data/eval/IC_EM_Saito2008_MAP.png)
