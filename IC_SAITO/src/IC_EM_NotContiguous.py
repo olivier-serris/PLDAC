@@ -1,5 +1,7 @@
 from IC_EM_Saito2008 import IC_EM_Saito2008
 import numpy as np
+import Cascade as csc
+
 
 class IC_EM_NotContiguous(IC_EM_Saito2008):
     
@@ -14,3 +16,11 @@ class IC_EM_NotContiguous(IC_EM_Saito2008):
     
     def __str__(self):
         return f'IC_EM_NotContiguoust={self.threshold}'
+    
+    
+    def D_plus_uv_id(self,D,u,v):
+        return csc.Episode_Where_Tu_ancestor_Tv(D,u,v)
+    
+    def D_minus_uv_len(self,D,u,v):
+        return csc.NbEpisode_Where_Tu_Not_ancestor_Tv(D,u,v) 
+    
