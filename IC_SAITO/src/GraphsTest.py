@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 
 DATA_PATH = '../data/eval/'
 
-
 def handmadeGraphTest():
     handmadeGraph=dok_matrix((5,5),dtype=np.float32)
     handmadeGraph[0,1] =0.5
@@ -38,9 +37,10 @@ def handmadeGraphTest():
 
 def saveCscadesDistrib(Cascades,t):
     lens = np.array([len(c) for c in Cascades])
-    hist = np.histogram(lens)[0]
+    plt.hist(lens)
+    #hist = np.histogram(lens)[0]
     plt.title(t)
-    plt.bar(np.arange(len(hist)),hist)
+    #plt.bar(np.arange(len(hist)),hist)
     plt.savefig(DATA_PATH+t+'_csc')
     plt.show()
 
@@ -74,7 +74,7 @@ def ScoresGraphModels(graphs,graphs_titles,models,nbCascades):
     for df,m in zip(dfs,mesures):
         df.name = m
     return dfs
-
+    
 def launch_test(nbCascades):
     # Generate GRAPHS 
     nx_to_dok_rand = lambda g : GGen.randomize_edges_values(
@@ -83,21 +83,19 @@ def launch_test(nbCascades):
     scale_free = nx.scale_free_graph(100)
     scale_free_dok = nx_to_dok_rand(scale_free)
     
-    erdos_renyi = nx.erdos_renyi_graph(30,p=0.05)
+    erdos_renyi = nx.erdos_renyi_graph(100,p=0.02)
     erdos_renyi_dok= nx_to_dok_rand(erdos_renyi)
     
-    connected_cave_man = nx.connected_caveman_graph(8,5)
+    connected_cave_man = nx.connected_caveman_graph(12,6)
     connected_cave_man_dok= nx_to_dok_rand(connected_cave_man)
     
-    bara = nx.barabasi_albert_graph(30,2)
+    bara = nx.barabasi_albert_graph(50,2)
     bara_dok = nx_to_dok_rand(bara)
 
     graphs =[scale_free,erdos_renyi,connected_cave_man,bara]
     graphs_dok = [scale_free_dok,erdos_renyi_dok,connected_cave_man_dok,bara_dok]
-    graphs_titles = [f"scale_free_{scale_free_dok.shape}",
-                     f"erdos_renyi{erdos_renyi_dok.shape}",
-                     f"connected_cave_man({connected_cave_man_dok.shape})",
-                     f"barabasi {bara_dok.shape}"]
+    graphs_titles = [f"scale_free", f"erdos_renyi",
+                     f"connected_cave_man", f"barabasi"]
     
     # train and test 
     models=  [IC_EM_NotContiguous(),IC_EM_Saito2008()]
@@ -105,21 +103,21 @@ def launch_test(nbCascades):
     pd.set_option('display.max_columns', len(graphs))
     
     # Save graphs 
-    for g,t in zip(graphs,graphs_titles) : 
-        plt.title(t) 
-        nx.draw_networkx(g,with_labels=False,node_size=40)
+    for g,dok,t in zip(graphs,graphs_dok,graphs_titles) : 
+        plt.title(t+f"_{dok.shape[0]}") 
+        nx.draw_networkx(g,with_labels=False,node_size=30)
         plt.savefig(DATA_PATH+t+'_g')
         plt.show()
         
     # save perfs : 
     for df in dfs:
         print(f"\n{df.name}:\n{df}")
-        with open(DATA_PATH+df.name,"w") as f:
+        with open(DATA_PATH+df.name+".md","w") as f:
             f.write(df.to_markdown())
             
 def main():
     print("start")
-    launch_test(100)
+    launch_test(200)
     print("end")
     
 
