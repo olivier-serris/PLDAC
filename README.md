@@ -17,7 +17,7 @@ Les longueurs des cascades ont les distributions suivantes : <br>
 
 ### IC_Sait_EM testing
 
-|  TIME                    |   scale_free_100 |   erdos_renyi_50 |   connected_cave_man_40 |   barabasi_30 |
+|  MEAN TIME               |   scale_free_100 |   erdos_renyi_50 |   connected_cave_man_40 |   barabasi_30 |
 |:-------------------------|-----------------:|-----------------:|------------------------:|--------------:|
 | IC_EM_NotContiguoust=0.1 |          1.40438 |          4.97177 |                2.29589  |       3.84879 |
 | IC_EM_Saito2008_t=0.1    |          1.04466 |          1.48646 |                0.656524 |       1.45412 |
@@ -33,6 +33,8 @@ Les longueurs des cascades ont les distributions suivantes : <br>
 | IC_EM_Saito2008_t=0.1    |         0.92538  |         0.851482 |                0.917274 |      0.896683 |
 | original                 |         0.981216 |         0.913629 |                0.947582 |      0.936219 |
 
-
-
 ### Missing user testing
+
+Courbes de performance selon le % d'infections retirée :
+
+![NotContiguous_MSE](IC_SAITO/data/eval/_IC_EM_NotContiguous_MSE.png) ![NotContiguous_MAP](IC_SAITO/data/eval/_IC_EM_NotContiguous_MAP.png)  ![IC_EM_Saito2008_MSE](IC_SAITO/data/eval/_IC_EM_Saito2008_MSE.png)  ![IC_EM_Saito2008_MAP](IC_SAITO/data/eval/_IC_EM_Saito2008_MAP.png)

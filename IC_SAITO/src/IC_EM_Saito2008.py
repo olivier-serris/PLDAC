@@ -22,7 +22,7 @@ class IC_EM_Saito2008(BaseEstimator):
         self.nodes = nodes
     
     def __str__(self):
-        return f'IC_EM_Saito2008_t={self.threshold}'
+        return f'IC_EM_Saito2008'
         
 ################### EM algorithm ####################
 

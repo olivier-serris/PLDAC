@@ -37,9 +37,9 @@ def MAP(graph,D):
     last_source =None
     mean_ap = 0
     for Ds in D: 
-        if Ds[0][0] != last_source: # on actualise les predictions en fonctions de le la source
-            last_source = Ds[0][0]
-            pws_gs =Pws_gs(graph,Ds[0][0])
+        if csc.firstInfected(Ds) != last_source: # on actualise les predictions en fonctions de le la source
+            last_source = csc.firstInfected(Ds)
+            pws_gs =Pws_gs(graph,csc.firstInfected(Ds))
             U_d = sorted(pws_gs,key=pws_gs.get,reverse=True) # sort par ordre decroissant
         DsNodeSet = set(csc.nodes_in_Ds(Ds)) # noeuds faisant partie de l'episode d'infection Ds
         mean_ap+=AP(U_d,DsNodeSet,graph)

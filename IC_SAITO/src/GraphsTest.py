@@ -38,9 +38,7 @@ def handmadeGraphTest():
 def saveCscadesDistrib(Cascades,t):
     lens = np.array([len(c) for c in Cascades])
     plt.hist(lens)
-    #hist = np.histogram(lens)[0]
     plt.title(t)
-    #plt.bar(np.arange(len(hist)),hist)
     plt.savefig(DATA_PATH+t+'_csc')
     plt.show()
 
@@ -48,33 +46,52 @@ def saveCscadesDistrib(Cascades,t):
 def CrossVal_MAP(model,D):
     return Metrics.MAP(model.graph,D)
 
-def ScoresGraphModels(graphs,graphs_titles,models,nbCascades):
-    mesures = ['MSE','MAP','time']
-    data = {m:{str(g_t):dict() for g_t in graphs_titles} for m in mesures}
+
+def ScoresGraphModels(graphs,graphs_titles,models,nbCascades,removed_pct_list):
+    metrics = ['fit_time','MSE','MAP']
+    data = {m:{str(g_t):dict() for g_t in graphs_titles} for m in metrics}
+    curves = {m:{str(g_t):dict() for g_t in graphs_titles} for m in metrics}
     
     for g,t in zip(graphs,graphs_titles) : 
         cascades = csc.genCascades(g,nbCascades)
         saveCscadesDistrib(cascades,t)
         D = [csc.CascadeToTimeRepr(c) for c in cascades]
-        crossVal_MSE = lambda m,d : Metrics.MSE(g, m.graph)
         
         for model in models: 
-            print("\nfor :",t,str(model))
-            model.set_params(csc.nodes_in_D(D))
-            cross_res = cross_validate(model,D,scoring={"MAP":CrossVal_MAP,"MSE":crossVal_MSE})
-            print(cross_res)
-            
-            data["MSE"][t][str(model)] = cross_res['test_MSE'].mean()
-            data["MAP"][t][str(model)] = cross_res['test_MAP'].mean()
-            data["time"][t][str(model)] = cross_res['fit_time'].mean()
+           res = evaluateModelCurve(model,t,g,cascades,removed_pct_list)
+           for metric,r in zip(metrics,res):
+               data[metric][t][str(model)] = r[0]
+               curves[metric][t][str(model)] = r           
 
         data["MAP"][t]["original"] = Metrics.MAP(g,D)
 
-    dfs = [pd.DataFrame(data[m]) for m in mesures]
-    for df,m in zip(dfs,mesures):
+    dfs = [pd.DataFrame(data[m]) for m in metrics]
+    for df,m in zip(dfs,metrics):
         df.name = m
-    return dfs
+    return dfs,curves
+
+def evaluateModel(model,gtitle,g,D,verbose= False):
+    if (verbose):
+        print("\nfor :",gtitle,str(model))
+    crossVal_MSE = lambda m,d : Metrics.MSE(g, m.graph)
+    model.set_params(csc.nodes_in_D(D))
+    cross_res = cross_validate(model,D,scoring={"MAP":CrossVal_MAP,"MSE":crossVal_MSE})
+    if(verbose):
+        print(cross_res)
+    time,MSE,MAP = cross_res['test_MSE'].mean(),cross_res['test_MAP'].mean(),cross_res['fit_time'].mean()
+    return time,MSE,MAP
+
+def evaluateModelCurve(model,gtitle,g,cascades,removed_pct_list):
+    time = np.zeros(len(removed_pct_list))
+    MSE = np.zeros(len(removed_pct_list))
+    MAP = np.zeros(len(removed_pct_list))
     
+    for i,pct in enumerate(removed_pct_list):
+        partial_cascades = csc.remove_xpct_infections(cascades,pct)
+        D = [csc.CascadeToTimeRepr(c) for c in partial_cascades]
+        time[i],MSE[i],MAP[i] = evaluateModel(model,gtitle,g,D,True)
+    return time,MSE,MAP
+
 def launch_test(nbCascades):
     # Generate GRAPHS 
     nx_to_dok_rand = lambda g : GGen.randomize_edges_values(
@@ -97,24 +114,37 @@ def launch_test(nbCascades):
     graphs_titles = [f"scale_free", f"erdos_renyi",
                      f"connected_cave_man", f"barabasi"]
     
+    removed_pct_list = np.linspace(0,0.5,5)
     # train and test 
     models=  [IC_EM_NotContiguous(),IC_EM_Saito2008()]
-    dfs = ScoresGraphModels(graphs_dok,graphs_titles,models,nbCascades)
+    dfs,curves = ScoresGraphModels(graphs_dok,graphs_titles,models,nbCascades,removed_pct_list)
     pd.set_option('display.max_columns', len(graphs))
     
-    # Save graphs 
+    # Save network graphs 
     for g,dok,t in zip(graphs,graphs_dok,graphs_titles) : 
-        plt.title(t+f"_{dok.shape[0]}") 
+        plt.title(t+f"{dok.shape[0]}") 
         nx.draw_networkx(g,with_labels=False,node_size=30)
         plt.savefig(DATA_PATH+t+'_g')
         plt.show()
-        
+    
     # save perfs : 
     for df in dfs:
         print(f"\n{df.name}:\n{df}")
         with open(DATA_PATH+df.name+".md","w") as f:
             f.write(df.to_markdown())
             
+    # save perf with missing data 
+    for m_id,model in enumerate(models):
+        for metric in ['MSE','MAP']:            
+            plt.title(f'Perf for {str(model)}_{metric}')
+            for g_id,t in enumerate(graphs_titles):
+                c = curves[metric][t][str(model)]
+                plt.plot(removed_pct_list,c,label=t)
+            plt.legend()
+            plt.xlabel('% of infections removed')
+            plt.ylabel(f'{metric}_score')
+            plt.savefig(f'{DATA_PATH}{str(model)}_{metric}.png')
+            plt.show()
 def main():
     print("start")
     launch_test(200)

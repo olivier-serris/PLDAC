@@ -15,7 +15,7 @@ class IC_EM_NotContiguous(IC_EM_Saito2008):
         return 1 - np.prod ([1-g[parent,w] for parent in preceding_nodes])
     
     def __str__(self):
-        return f'IC_EM_NotContiguoust={self.threshold}'
+        return f'IC_EM_NotContiguous'
     
     
     def D_plus_uv_id(self,D,u,v):

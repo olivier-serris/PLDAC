@@ -5,6 +5,7 @@
     --> Cascade filtering
 """
 import numpy as np
+import copy
 
 def genCascades(graph,nbCascades):
     '''
@@ -91,9 +92,36 @@ def nodes_in_D(D):
     return np.unique([n for Ds in D 
                         for nodes in Ds 
                         for n in nodes])
+
+def firstInfected(Ds):
+    for nodes in Ds: 
+        if (nodes):
+            return nodes[0]
+    raise Exception("Empty Cascade")
+    
 def sortDbySource(D):
-    'Sort cascades repr by source (first infecteed node)'
-    return sorted(D, key = lambda Ds:Ds[0][0])
+    'Sort cascades repr by source (first infected node)'
+    return sorted(D, key = lambda Ds:firstInfected(Ds))
+
+def remove_xpct_infections(C, pct):
+    assert 0 <= pct <=1
+    ''' Returns a copy of all cascades from database from which @pct of the observable infections has been removed.'''
+    infection_ids = np.array([[i,n_i] for i,c_i in enumerate(C)
+                                        for n_i in c_i.keys()])
+    np.random.shuffle(infection_ids)
+    to_remove = infection_ids[:int(pct*len(infection_ids))]
+    new_C = copy.deepcopy(C)
+    for (c_i,n_i) in to_remove:
+        new_C[c_i].pop(n_i)
+        
+    new_C = list(filter(bool,new_C))
+    return new_C
+    
+def remove_xpct_users_by_cascades(c,pct):
+    ''' return a copy of all cascade from which some data is removed
+    At each cascades @pct of the users from the graph a considered hidden'''
+    pass
+    
     
 
 def nodes_in_cascades(C):
