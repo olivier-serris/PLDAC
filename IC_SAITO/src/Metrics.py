@@ -6,7 +6,7 @@ def MSE(g1,g2):
     if(g1.shape < g2.shape):
         g1,g2 = g2,g1
     g2.resize(g1.shape)
-    return np.sum((g1-g2).power(2))
+    return ((g1-g2).power(2)).mean()
 
 
 def Pws_gs(graph,source,nbEpisode=100):

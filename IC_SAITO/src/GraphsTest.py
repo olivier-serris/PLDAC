@@ -11,6 +11,7 @@ import pprint as pp
 from networkx import nx
 import GraphGen as GGen
 import matplotlib.pyplot as plt
+import time
 
 DATA_PATH = '../data/eval/'
 
@@ -78,7 +79,7 @@ def evaluateModel(model,gtitle,g,D,verbose= False):
     cross_res = cross_validate(model,D,scoring={"MAP":CrossVal_MAP,"MSE":crossVal_MSE})
     if(verbose):
         print(cross_res)
-    time,MSE,MAP = cross_res['test_MSE'].mean(),cross_res['test_MAP'].mean(),cross_res['fit_time'].mean()
+    time,MSE,MAP = cross_res['fit_time'].mean(),cross_res['test_MSE'].mean(),cross_res['test_MAP'].mean()
     return time,MSE,MAP
 
 def evaluateModelCurve(model,gtitle,g,cascades,removed_pct_list):
@@ -114,7 +115,7 @@ def launch_test(nbCascades):
     graphs_titles = [f"scale_free", f"erdos_renyi",
                      f"connected_cave_man", f"barabasi"]
     
-    removed_pct_list = np.linspace(0,0.5,5)
+    removed_pct_list = np.linspace(0,0.8,9)
     # train and test 
     models=  [IC_EM_NotContiguous(),IC_EM_Saito2008()]
     dfs,curves = ScoresGraphModels(graphs_dok,graphs_titles,models,nbCascades,removed_pct_list)
@@ -147,8 +148,9 @@ def launch_test(nbCascades):
             plt.show()
 def main():
     print("start")
+    start_time = time.time()
     launch_test(200)
-    print("end")
+    print("end " ,time.time()-start_time)
     
 
 if __name__ == "__main__":
