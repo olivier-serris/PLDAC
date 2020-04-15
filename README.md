@@ -19,19 +19,19 @@ Les longueurs des cascades ont les distributions suivantes : <br>
 
 |    MEAN FIT TIME    |   scale_free |   erdos_renyi |   connected_cave_man |   barabasi |
 |:--------------------|-------------:|--------------:|---------------------:|-----------:|
-| IC_EM_NotContiguous |      1.46354 |       1.84581 |              2.20731 |    4.46637 |
-| IC_EM_Saito2008     |      1.12314 |       1.33239 |              1.16416 |    2.28718 |
+| IC_EM_NotContiguous |      1.27084 |       1.7629  |              2.09882 |    4.56777 |
+| IC_EM_Saito2008     |      1.00783 |       1.34655 |              1.24197 |    2.48512 |
 
 | CROSS-VAL MSE       |   scale_free |   erdos_renyi |   connected_cave_man |   barabasi |
 |:--------------------|-------------:|--------------:|---------------------:|-----------:|
-| IC_EM_NotContiguous |   0.00722533 |    0.00790295 |            0.0139905 |  0.0330249 |
-| IC_EM_Saito2008     |   0.00257764 |    0.00306599 |            0.0122064 |  0.0165122 |
+| IC_EM_NotContiguous |     0.44908  |      0.201172 |             0.220224 |   0.449441 |
+| IC_EM_Saito2008     |     0.149846 |      0.111583 |             0.178795 |   0.227348 |
 
 | CROSS-VAL MAP       |   scale_free |   erdos_renyi |   connected_cave_man |   barabasi |
 |:--------------------|-------------:|--------------:|---------------------:|-----------:|
-| IC_EM_NotContiguous |     0.852867 |      0.650023 |             0.649683 |   0.86646  |
-| IC_EM_Saito2008     |     0.863098 |      0.776897 |             0.843288 |   0.924959 |
-| original            |     0.981434 |      0.907926 |             0.93824  |   0.967755 |
+| IC_EM_NotContiguous |     0.891275 |      0.838094 |             0.650595 |   0.883628 |
+| IC_EM_Saito2008     |     0.896268 |      0.846094 |             0.868657 |   0.923925 |
+| original            |     0.996185 |      0.92843  |             0.935542 |   0.966997 |
 
 ### Missing user testing
 

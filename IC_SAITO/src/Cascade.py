@@ -113,15 +113,21 @@ def remove_xpct_infections(C, pct):
     new_C = copy.deepcopy(C)
     for (c_i,n_i) in to_remove:
         new_C[c_i].pop(n_i)
-        
     new_C = list(filter(bool,new_C))
     return new_C
-    
-def remove_xpct_users_by_cascades(c,pct):
-    ''' return a copy of all cascade from which some data is removed
-    At each cascades @pct of the users from the graph a considered hidden'''
-    pass
-    
+
+def remove_Xpct_users(nodes,C,pct):
+    ''' Returns a copy of all cascades from database from each cascades, @pct of the user are randomly selected and removed'''
+    assert 0 <= pct <=1
+    new_C = copy.deepcopy(C)
+    for c in new_C:
+         nbNodeToRemove = int(round(len(nodes)*pct))
+         to_remove = np.random.choice(nodes, size=nbNodeToRemove)
+         for node in to_remove : 
+             if node in c:
+                 c.pop(node)
+    new_C = list(filter(bool,new_C))
+    return new_C
     
 
 def nodes_in_cascades(C):

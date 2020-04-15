@@ -1,12 +1,10 @@
 import numpy as np
 import Cascade as csc 
 
-def MSE(g1,g2):
+def MSE(ref,g):
     '''calcule la mean square error entre 2 graphes '''
-    if(g1.shape < g2.shape):
-        g1,g2 = g2,g1
-    g2.resize(g1.shape)
-    return ((g1-g2).power(2)).mean()
+    g.resize(ref.shape)
+    return ((ref-g).power(2)).sum()/len(ref)
 
 
 def Pws_gs(graph,source,nbEpisode=100):

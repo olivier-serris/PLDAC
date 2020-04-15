@@ -86,9 +86,9 @@ def evaluateModelCurve(model,gtitle,g,cascades,removed_pct_list):
     time = np.zeros(len(removed_pct_list))
     MSE = np.zeros(len(removed_pct_list))
     MAP = np.zeros(len(removed_pct_list))
-    
+    nodesInG = np.unique(sum(g.keys(),())).astype(int)
     for i,pct in enumerate(removed_pct_list):
-        partial_cascades = csc.remove_xpct_infections(cascades,pct)
+        partial_cascades = csc.remove_Xpct_users(nodesInG,cascades,pct)
         D = [csc.CascadeToTimeRepr(c) for c in partial_cascades]
         time[i],MSE[i],MAP[i] = evaluateModel(model,gtitle,g,D,True)
     return time,MSE,MAP
