@@ -155,7 +155,7 @@ def Episode_Where_Tu_precedes_Tv(D,u,v):
 
 def NbEpisode_Where_Tu_Not_precedes_Tv(D,u,v):
     '''
-    Return Cardinal of the set of epsiodes (Ds) where node v is in episode and not(t_u=t_v+1) 
+    Return Cardinal of the set of epsiodes (Ds) where node u is in episode and not(t_u=t_v+1) 
     Parameters
     ----------
     D : Array
@@ -201,7 +201,7 @@ def Episode_Where_Tu_ancestor_Tv(D,u,v):
 
 def NbEpisode_Where_Tu_Not_ancestor_Tv(D,u,v):
     '''
-    Returns number of epsiodes where : node v is in episode and not(t_u<t_v) 
+    Returns number of epsiodes where : node u is in episode and not(t_u<t_v) 
     Parameters
     ----------
     D : Array
@@ -217,9 +217,8 @@ def NbEpisode_Where_Tu_Not_ancestor_Tv(D,u,v):
         for t in range(0,len(Ds)):
             if (u in Ds[t]):
                 u_in_Ds = True
-            if (u_in_Ds and v in Ds[t]):
+            if (v in Ds[t]):
                 v_in_Ds = True
-                break
         if (u_in_Ds and not v_in_Ds):
             D_minus_len+=1
     return D_minus_len
