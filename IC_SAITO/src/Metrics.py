@@ -6,6 +6,10 @@ def MSE(ref,g):
     g.resize(ref.shape)
     return ((ref-g).power(2)).sum()/len(ref)
 
+def MAE(ref,g):
+    '''calcule la mean absolute error entre 2 graphes '''
+    g.resize(ref.shape)
+    return (np.abs(ref-g)).sum()/len(ref)
 
 def Pws_gs(graph,source,nbEpisode=100):
     ''' Calcule la probabilité qu'un noeud soit infecté connaissant 
