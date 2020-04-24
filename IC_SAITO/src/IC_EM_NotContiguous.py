@@ -22,5 +22,5 @@ class IC_EM_NotContiguous(IC_EM_Saito2008):
         return csc.Episode_Where_Tu_ancestor_Tv(D,u,v)
     
     def D_minus_uv_len(self,D,u,v):
-        return csc.NbEpisode_Where_Tu_Not_ancestor_Tv(D,u,v) 
+        return csc.NbEpisode_With_u_and_not_v(D,u,v) 
     

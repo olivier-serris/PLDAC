@@ -1,8 +1,14 @@
 import numpy as np
 import Cascade as csc 
 
+def RealMSE(ref,g):
+    g = g.copy()
+    g.resize(ref.shape)
+    return (ref-g).power(2).mean()
+
 def MSE(ref,g):
     '''calcule la mean square error entre 2 graphes '''
+    g = g.copy()
     g.resize(ref.shape)
     return ((ref-g).power(2)).sum()/len(ref)
 

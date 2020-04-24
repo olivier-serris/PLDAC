@@ -29,8 +29,8 @@ class IC_EM_Saito2008(BaseEstimator):
     def EM_IC(self,D,debug = False):
         # initalisation
         self.graph = GGen.RandGraphFromNodes(self.nodes)
-        D_plus_id =   {(v,u):self.D_plus_uv_id(D,v,u) for u,v in self.graph.keys()}
-        D_minus_len = {(v,u):self.D_minus_uv_len(D,v,u)for u,v in self.graph.keys()}
+        D_plus_id =   {(v,u):self.D_plus_uv_id(D,v,u) for v,u in self.graph.keys()}
+        D_minus_len = {(v,u):self.D_minus_uv_len(D,v,u)for v,u in self.graph.keys()}
         self.remove_edges(self.graph,D_plus_id)
         
         if debug:
@@ -45,7 +45,7 @@ class IC_EM_Saito2008(BaseEstimator):
             if debug : 
                 new_ll = self.llikelyhood(self.graph,D)
                 if new_ll < ll : 
-                    print(f"Likelyhood Error : descreasing : from {ll} to {new_ll}")
+                    raise Exception(f"Likelyhood Error : descreasing : from {ll} to {new_ll}")
                 ll = new_ll
         return self.graph
 
@@ -90,6 +90,7 @@ class IC_EM_Saito2008(BaseEstimator):
         for i,nodes in enumerate(Ds):
             if (w in nodes):
                 t = i
+                break
         if (t == 0): # si le noeud est le premier
             return 1
         if (t is None): # si le noeud n'est pas dans l'episode de diffusion
@@ -130,6 +131,7 @@ class IC_EM_Saito2008(BaseEstimator):
             time of w infection in cascade D_s
         Returns Integer    
         '''
+        #raise Exception("Never ever Right ? ")
         return np.prod([1-g[parent,w] for parent in csc.nodes_in_Ds(Ds)])
     
     def D_plus_uv_id(self,D,u,v):
@@ -153,7 +155,9 @@ class IC_EM_Saito2008(BaseEstimator):
         '''Calcule la log vraisemblance d'une cascade selon le graph '''
         ll = 0
         for v,u in g.keys() :
-            ll += np.log(self.P_sw(g,Ds,u))
+            Psw = self.P_sw(g,Ds,u)
+            Psw = np.where(Psw!=0,Psw,np.finfo(float).eps)
+            ll += np.log(Psw)
         return ll
     
     def llikelyhood(self,g,D):

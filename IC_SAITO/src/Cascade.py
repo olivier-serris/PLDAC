@@ -199,9 +199,9 @@ def Episode_Where_Tu_ancestor_Tv(D,u,v):
                 preceding_nodes +=Ds[t]
     return D_plus
 
-def NbEpisode_Where_Tu_Not_ancestor_Tv(D,u,v):
+def NbEpisode_With_u_and_not_v(D,u,v):
     '''
-    Returns number of epsiodes where : node u is in episode and not(t_u<t_v) 
+    Returns number of epsiodes where : node u is in episode and not V 
     Parameters
     ----------
     D : Array
