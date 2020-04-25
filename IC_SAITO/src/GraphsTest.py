@@ -78,13 +78,12 @@ def ScoresGraphModels(graph_dict,models,metrics,nbCascades,removed_pct_list):
 def evaluateModel(model,g,D,metrics):
     ''' return res of cross validation for model g wit data D and metrics
         the result is a dict  {metric_name : metric_result}'''
-    scoring_metrics = {m : partial(metrics[m],g=g) for m in metrics.keys() }
-    g = None    
     model.set_params(csc.nodes_in_D(D))
-    cross_res = cross_validate(model,D,scoring=scoring_metrics)
-    print(f'\n{cross_res}')
-    scores = {m:cross_res[f'test_{m}'].mean() for m in metrics.keys()}
-    scores['fit_time'] = cross_res['fit_time'].mean()
+    start_time = time.time()
+    model.fit(D)
+    scores = {label:metric(model,D,g) for (label, metric) in metrics.items()}
+    scores['fit_time'] = time.time()-start_time
+    print(scores)
     return scores
 
 def evaluateModelCurve(model,g,cascades,metrics,partial_cascades):
@@ -92,8 +91,8 @@ def evaluateModelCurve(model,g,cascades,metrics,partial_cascades):
     data['fit_time'] = np.zeros(len(partial_cascades))
     for i,partial_cascade in enumerate(partial_cascades):
         D = [csc.CascadeToTimeRepr(c) for c in partial_cascade]
-        cross_val_dict = evaluateModel(model,g,D,metrics)
-        for (metric,res) in cross_val_dict.items():
+        scores_dict = evaluateModel(model,g,D,metrics)
+        for (metric,res) in scores_dict.items():
             data[metric][i] = res
     return data
 
