@@ -55,43 +55,40 @@ def ScoresGraphModels(graph_dict,models,metrics,nbCascades,removed_pct_list):
     for gtitle,g in graph_dict.items() : 
         cascades = csc.genCascades(g,nbCascades)
         saveCscadesDistrib(cascades,gtitle)
-        
         nodesInG = np.unique(sum(g.keys(),())).astype(int)
         partial_cascades = [csc.remove_Xpct_users(nodesInG,cascades,pct) 
                             for pct in removed_pct_list]
         
         for model in models: 
+            model.set_params(nodesInG)
             print("\nfor :",gtitle,str(model))
-            res = evaluateModelCurve(model,g,cascades,metrics,partial_cascades)
+            res = evaluateModelCurve(model,g,metrics,cascades,partial_cascades)
             for metric,r in res.items():
                 data[metric][gtitle][str(model)] = r[0]
                 curves[metric][gtitle][str(model)] = r
         if ("MAP" in metrics.keys()):
-            D = [csc.CascadeToTimeRepr(c) for c in cascades]
-            data["MAP"][gtitle]["original"] = Metrics.MAP(g,D)
+            data["MAP"][gtitle]["original"] = Metrics.MAP(g,cascades)
     print(f"data : {data}")
     dfs = [pd.DataFrame(data[m]) for m in indicators]
     for df,m in zip(dfs,indicators):
         df.columns.name = m
     return dfs,curves
 
-def evaluateModel(model,g,D,metrics):
+def evaluateModel(model,g,C,original_cascades,metrics):
     ''' return res of cross validation for model g wit data D and metrics
         the result is a dict  {metric_name : metric_result}'''
-    model.set_params(csc.nodes_in_D(D))
     start_time = time.time()
-    model.fit(D)
-    scores = {label:metric(model,D,g) for (label, metric) in metrics.items()}
+    model.fit(C)
+    scores = {label:metric(model,original_cascades,g) for (label, metric) in metrics.items()}
     scores['fit_time'] = time.time()-start_time
     print(scores)
     return scores
 
-def evaluateModelCurve(model,g,cascades,metrics,partial_cascades):
+def evaluateModelCurve(model,g,metrics,original_cascades,partial_cascades):
     data = {m:np.zeros(len(partial_cascades)) for m in metrics.keys()}
     data['fit_time'] = np.zeros(len(partial_cascades))
     for i,partial_cascade in enumerate(partial_cascades):
-        D = [csc.CascadeToTimeRepr(c) for c in partial_cascade]
-        scores_dict = evaluateModel(model,g,D,metrics)
+        scores_dict = evaluateModel(model,g,partial_cascade,original_cascades,metrics)
         for (metric,res) in scores_dict.items():
             data[metric][i] = res
     return data

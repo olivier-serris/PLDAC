@@ -93,15 +93,19 @@ def nodes_in_D(D):
                         for nodes in Ds 
                         for n in nodes])
 
-def firstInfected(Ds):
+def firstInfected_D(Ds):
     for nodes in Ds: 
         if (nodes):
             return nodes[0]
     raise Exception("Empty Cascade")
-    
+        
 def sortDbySource(D):
     'Sort cascades repr by source (first infected node)'
     return sorted(D, key = lambda Ds:firstInfected(Ds))
+
+def sortCbySource(C):
+    'Sort cascades repr by source (first infected node)'
+    return sorted(C, key = lambda c: min(c, key=c.get))
 
 def remove_xpct_infections(C, pct):
     assert 0 <= pct <=1
