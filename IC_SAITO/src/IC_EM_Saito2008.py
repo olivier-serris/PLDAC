@@ -51,7 +51,7 @@ class IC_EM_Saito2008(BaseEstimator):
         return self.graph
 
     def Expectation(self,g,D,C):
-        p_sw = [{n:self.P_Infected_sw(g,Ds,n,C[i][n]) 
+        p_sw = [{n:self.P_Infected_sw(g,C[i],Ds,n,C[i][n]) 
                  for n in C[i].keys()} 
                     for i,Ds in enumerate(D)]
         return p_sw
@@ -73,7 +73,7 @@ class IC_EM_Saito2008(BaseEstimator):
             return 0
         return (1/(D_plus_u_v_len + Dminus_len_u_v)) * np.sum([g[u,v]/p_sw[i][v] for i in D_plus_id_u_v])
 
-    def P_Infected_sw(self,g,Ds,w,t):
+    def P_Infected_sw(self,g,c,Ds,w,t):
         '''
         Likelyhood of positive infection of node w given 
         D_s cascade and the influence graph g
@@ -127,7 +127,7 @@ class IC_EM_Saito2008(BaseEstimator):
             if (t is None): # si le noeud n'est pas dans l'episode de diffusion
                 return self.P_NotInfected_sw(g,Ds,w)
             else :  # si le noeud est dans l'épisode de diffusion
-                return self.P_Infected_sw(g,Ds,w,t) 
+                return self.P_Infected_sw(g,Cs,Ds,w,t) 
         
     def P_NotInfected_sw(self,g,Ds,w):
         '''
