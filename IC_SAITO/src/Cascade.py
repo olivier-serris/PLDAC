@@ -126,10 +126,10 @@ def remove_Xpct_users(nodes,C,pct):
     new_C = copy.deepcopy(C)
     for c in new_C:
          nbNodeToRemove = int(round(len(nodes)*pct))
-         to_remove = np.random.choice(nodes, size=nbNodeToRemove)
+         to_remove = np.random.choice(nodes, size=nbNodeToRemove,replace = False)
          for node in to_remove : 
              if node in c:
-                 c.pop(node)
+                 del c[node]
     new_C = list(filter(bool,new_C))
     return new_C
     
@@ -162,7 +162,7 @@ def NbEpisode_Where_Tu_Not_precedes_Tv(C,u,v):
     v : Node
     Returns Array of episodes ids
     '''
-    return sum (u in cascade and ( v not in cascade or (cascade[u] != cascade[v]-1))
+    return sum (u in cascade and ( v not in cascade or (cascade[v] > cascade[u]+1))
                     for cascade in C)
 
 def Episode_Where_Tu_ancestor_Tv(C,u,v):

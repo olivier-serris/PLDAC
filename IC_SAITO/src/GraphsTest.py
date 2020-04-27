@@ -53,10 +53,10 @@ def ScoresGraphModels(graph_dict,models,metrics,nbCascades,removed_pct_list):
     for gtitle,g in graph_dict.items() : 
         cascades = csc.genCascades(g,nbCascades)
         saveCscadesDistrib(cascades,gtitle)
-        nodesInG = np.unique(sum(g.keys(),())).astype(int)
+        nodesInG = np.arange(g.shape[0]).astype(int)
         partial_cascades = [csc.remove_Xpct_users(nodesInG,cascades,pct) 
                             for pct in removed_pct_list]
-        
+
         for model in models: 
             model.set_params(nodesInG)
             print("\nfor :",gtitle,str(model))
@@ -66,7 +66,6 @@ def ScoresGraphModels(graph_dict,models,metrics,nbCascades,removed_pct_list):
                 curves[metric][gtitle][str(model)] = r
         if ("MAP" in metrics.keys()):
             data["MAP"][gtitle]["original"] = Metrics.MAP(g,cascades)
-    print(f"data : {data}")
     dfs = [pd.DataFrame(data[m]) for m in indicators]
     for df,m in zip(dfs,indicators):
         df.columns.name = m
@@ -166,3 +165,4 @@ def main():
     
 if __name__ == "__main__":
     main()
+   
