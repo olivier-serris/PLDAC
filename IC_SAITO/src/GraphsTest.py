@@ -1,7 +1,6 @@
 from IC_EM_Saito2008 import IC_EM_Saito2008
 from IC_EM_NotContiguous import IC_EM_NotContiguous
 import Cascade as csc
-import scipy
 from scipy.sparse import dok_matrix
 from sklearn.model_selection import cross_validate 
 import numpy as np
@@ -12,7 +11,6 @@ from networkx import nx
 import GraphGen as GGen
 import matplotlib.pyplot as plt
 import time
-from functools import partial
 
 DATA_PATH = '../data/eval/'
 
@@ -122,12 +120,11 @@ def generateGraphs():
         nx.draw_networkx(g,with_labels=False,node_size=30)
         plt.savefig(DATA_PATH+t+'_g')
         plt.show()
-    
     return dict(zip(graphs_titles,graphs_dok))
 
 def launch_test(models,graph_dict,nbCascades,metrics):
 
-    removed_pct_list = np.linspace(0,0.8,9)
+    removed_pct_list = np.linspace(0,1,11)
     # train and test     
     dfs,curves = ScoresGraphModels(graph_dict,models,metrics,nbCascades,removed_pct_list)
         
@@ -156,9 +153,9 @@ def main():
     print("start : ")
     
     start_time = time.time()
-    metrics = { 'MSE':(lambda model,D,g : Metrics.MSE(g, model.graph)),
+    metrics = { 'MSE':(lambda model,C,g : Metrics.MSE(g, model.graph)),
                 #'MAE':(lambda model,D,g : Metrics.MAE(g, model.graph)),
-                'MAP':(lambda model,D,g : Metrics.MAP(model.graph,D)),
+                'MAP':(lambda model,C,g : Metrics.MAP(model.graph,C)),
                }
     models=  [IC_EM_Saito2008(),
               IC_EM_NotContiguous()]

@@ -101,7 +101,7 @@ def firstInfected_D(Ds):
         
 def sortDbySource(D):
     'Sort cascades repr by source (first infected node)'
-    return sorted(D, key = lambda Ds:firstInfected(Ds))
+    return sorted(D, key = lambda Ds:firstInfected_D(Ds))
 
 def sortCbySource(C):
     'Sort cascades repr by source (first infected node)'
@@ -137,92 +137,58 @@ def remove_Xpct_users(nodes,C,pct):
 def nodes_in_cascades(C):
     return np.fromiter(set().union(*[set(c.keys()) for c in C]),dtype=int)
 
-
-def Episode_Where_Tu_precedes_Tv(D,u,v):
+def Episode_Where_Tu_precedes_Tv(C,u,v):
     '''
     Returns all episode id where t_u=t_v+1 
     Parameters
     ----------
-    D : Array
-        Containes All Ds (timed representation of cascades)
+    C : Array
+        Containes All cascades
     u : Node
     v : Node
     Returns Array of episodes ids
     '''
-    D_plus = []
-    for i,Ds in enumerate(D): 
-        for t in range(1,len(Ds)):
-            if (u in Ds[t-1] and v in Ds[t]):
-                D_plus.append(i)
-                break
-    return D_plus
+    return [i for i,cascade in enumerate(C) 
+                if u in cascade and v in cascade and cascade[u] == cascade[v]-1]
 
-def NbEpisode_Where_Tu_Not_precedes_Tv(D,u,v):
+def NbEpisode_Where_Tu_Not_precedes_Tv(C,u,v):
     '''
-    Return Cardinal of the set of epsiodes (Ds) where node u is in episode and not(t_u=t_v+1) 
+    Return Cardinal of the set of cascades  where node u is in episode and not(t_u=t_v+1) 
     Parameters
     ----------
-    D : Array
-        Containes All Ds (timed representation of cascades)
+    C : Array
+        Containes All cascades
     u : Node
     v : Node
     Returns Array of episodes ids
     '''
-    D_minus_len=0
-    for Ds in D : 
-        for t in range(1,len(Ds)):
-            if (u in Ds[t-1] and v not in Ds[t]):
-                D_minus_len+=1
-                break
-        if (u in Ds[-1]):
-            D_minus_len+=1
-    return D_minus_len
+    return sum (u in cascade and ( v not in cascade or (cascade[u] != cascade[v]-1))
+                    for cascade in C)
 
-
-def Episode_Where_Tu_ancestor_Tv(D,u,v):
+def Episode_Where_Tu_ancestor_Tv(C,u,v):
     '''
-    Returns all episode id where t_u<t_v 
+    Returns all casacdes id where t_u<t_v 
     Parameters
     ----------
-    D : Array
-        Containes All Ds (timed representation of cascades)
+    C : Array
+        Containes All cascades
     u : Node
     v : Node
     Returns Array of episodes ids
     '''
-    D_plus = []
-    
-    for i,Ds in enumerate(D) : 
-        preceding_nodes = []
-        for t in range(0,len(Ds)):
-            if (v in Ds[t]):
-                if (u in preceding_nodes):
-                    D_plus.append(i)
-                    break
-            else : 
-                preceding_nodes +=Ds[t]
-    return D_plus
+    return [i for i,cascade in enumerate(C) 
+                if u in cascade and v in cascade and cascade[u] < cascade[v]]
 
-def NbEpisode_With_u_and_not_v(D,u,v):
+def NbEpisode_With_u_and_not_v(C,u,v):
     '''
     Returns number of epsiodes where : node u is in episode and not V 
     Parameters
     ----------
-    D : Array
-        Containes All Ds (timed representation of cascades)
+    C : Array
+        Containes All cascades
     u : Node
     v : Node
     Returns Array of episodes ids
     '''
-    D_minus_len = 0
-    for Ds in D : 
-        u_in_Ds = False
-        v_in_Ds = False
-        for t in range(0,len(Ds)):
-            if (u in Ds[t]):
-                u_in_Ds = True
-            if (v in Ds[t]):
-                v_in_Ds = True
-        if (u_in_Ds and not v_in_Ds):
-            D_minus_len+=1
-    return D_minus_len
+    return sum(u in cascade and v not in cascade 
+               for cascade in C)

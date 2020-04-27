@@ -18,9 +18,9 @@ class IC_EM_NotContiguous(IC_EM_Saito2008):
     def __str__(self):
         return f'IC_EM_NotContiguous'
     
-    def D_plus_uv_id(self,D,u,v):
-        return csc.Episode_Where_Tu_ancestor_Tv(D,u,v)
+    def D_plus_uv_id(self,C,u,v):
+        return csc.Episode_Where_Tu_ancestor_Tv(C,u,v)
     
-    def D_minus_uv_len(self,D,u,v):
-        return csc.NbEpisode_With_u_and_not_v(D,u,v) 
+    def D_minus_uv_len(self,C,u,v):
+        return csc.NbEpisode_With_u_and_not_v(C,u,v) 
     

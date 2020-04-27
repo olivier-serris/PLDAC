@@ -30,8 +30,8 @@ class IC_EM_Saito2008(BaseEstimator):
     def EM_IC(self,C,D,debug = False):
         # initalisation
         self.graph = GGen.RandGraphFromNodes(self.nodes)
-        D_plus_id =   {(v,u):self.D_plus_uv_id(D,v,u) for v,u in self.graph.keys()}
-        D_minus_len = {(v,u):self.D_minus_uv_len(D,v,u)for v,u in self.graph.keys()}
+        D_plus_id =   {(v,u):self.D_plus_uv_id(C,v,u) for v,u in self.graph.keys()}
+        D_minus_len = {(v,u):self.D_minus_uv_len(C,v,u)for v,u in self.graph.keys()}
         self.remove_edges(self.graph,D_plus_id)
         
         if debug:
@@ -91,10 +91,10 @@ class IC_EM_Saito2008(BaseEstimator):
             return 1
         return 1 - np.prod ([1-g[parent,w] for parent in Ds[t-1]])
     
-    def D_plus_uv_id(self,D,u,v):
-        return csc.Episode_Where_Tu_precedes_Tv(D,u,v)
-    def D_minus_uv_len(self,D,u,v):
-        return csc.NbEpisode_Where_Tu_Not_precedes_Tv(D,u,v) 
+    def D_plus_uv_id(self,C,u,v):
+        return csc.Episode_Where_Tu_precedes_Tv(C,u,v)
+    def D_minus_uv_len(self,C,u,v):
+        return csc.NbEpisode_Where_Tu_Not_precedes_Tv(C,u,v) 
     
 ############# Graph Optimisation ######################
 
