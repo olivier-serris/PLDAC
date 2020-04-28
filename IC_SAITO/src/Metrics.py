@@ -20,7 +20,7 @@ def MAE(ref,g):
     g.resize(ref.shape)
     return (np.abs(ref-g)).sum()/len(ref)
 
-def Pws_gs(graph,source,nbEpisode=100):
+def Pws_gs(graph,source,nbEpisode=1000):
     ''' Calcule la probabilité qu'un noeud soit infecté connaissant 
         une source et un graph de diffusion
         On calcule par moyenne sur echantionnage d'episodes d'infections '''
