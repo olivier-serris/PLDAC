@@ -40,7 +40,7 @@ def handmadeGraphTest():
 def saveCscadesDistrib(Cascades,t):
     '''Sauvegarde la distribution de longeur de cascades sous forme d'histogramme'''
     lens = np.array([len(c) for c in Cascades])
-    plt.hist(lens)
+    plt.hist(lens,bins= max(lens))
     plt.title(t)
     plt.savefig(DATA_PATH+t+'_csc')
     plt.show()
@@ -76,8 +76,9 @@ def evaluateModel(model,g,C,original_cascades,metrics):
         the result is a dict  {metric_name : metric_result}'''
     start_time = time.time()
     model.fit(C)
+    fit_time =  time.time()-start_time
     scores = {label:metric(model,original_cascades,g) for (label, metric) in metrics.items()}
-    scores['fit_time'] = time.time()-start_time
+    scores['fit_time'] =fit_time
     print(scores)
     return scores
 
@@ -159,10 +160,12 @@ def main():
     models=  [IC_EM_Saito2008(),
               IC_EM_NotContiguous()]
     graph_dict = generateGraphs()
-    launch_test(models,graph_dict,200,metrics)
+    launch_test(models,graph_dict,500,metrics)
    
     print("End \nTest duration : " ,time.time()-start_time)
-    
+
+            
+
 if __name__ == "__main__":
     main()
    

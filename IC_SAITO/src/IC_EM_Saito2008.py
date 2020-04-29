@@ -41,13 +41,15 @@ class IC_EM_Saito2008(BaseEstimator):
         while loop:
             p_sw = self.Expectation(self.graph,D,C)
             next_g = self.Maximisation(self.graph,D_plus_id,D_minus_len,p_sw)
-            loop = Metrics.MSE(self.graph,next_g)  > self.threshold
+            loop = Metrics.SSE(self.graph,next_g)  > self.threshold
+            #print(change)
             self.graph = next_g
             if debug : 
-                new_ll = self.llikelyhood(self.graph,D)
+                new_ll = self.llikelyhood(self.graph,C,D)
                 if new_ll < ll : 
                     raise Exception(f"Likelyhood Error : descreasing : from {ll} to {new_ll}")
                 ll = new_ll
+        #print("ll: ",ll)
         return self.graph
 
     def Expectation(self,g,D,C):
@@ -121,15 +123,15 @@ class IC_EM_Saito2008(BaseEstimator):
                     node w 
                 Returns integer 
                 '''
-            t = Cs[w]
+            t = Cs.get(w,None)
             if (t == 0): # si le noeud est le premier
                 return 1
             if (t is None): # si le noeud n'est pas dans l'episode de diffusion
-                return self.P_NotInfected_sw(g,Ds,w)
+                return self.P_NotInfected_sw(g,Cs,w)
             else :  # si le noeud est dans l'épisode de diffusion
                 return self.P_Infected_sw(g,Cs,Ds,w,t) 
         
-    def P_NotInfected_sw(self,g,Ds,w):
+    def P_NotInfected_sw(self,g,Cs,w):
         '''
         Likelyhood of negative infection of node w given 
         D_s cascade and the influence graph g
@@ -143,18 +145,18 @@ class IC_EM_Saito2008(BaseEstimator):
             time of w infection in cascade D_s
         Returns Integer    
         '''
-        return np.prod([1-g[parent,w] for parent in csc.nodes_in_Ds(Ds)])
+        return np.prod([1-g[parent,w] for parent in Cs.keys()])
 
     def llikelyhood_Ds(self,g,Cs,Ds):
         '''Calcule la log vraisemblance d'une cascade selon le graph '''
         ll = 0
-        for v,u in g.keys() :
-            Psw = self.P_sw(g,Cs,Ds,u)
+        for n in range(g.shape[0]) :
+            Psw = self.P_sw(g,Cs,Ds,n)
             Psw = np.where(Psw!=0,Psw,np.finfo(float).eps)
             ll += np.log(Psw)
         return ll
     
-    def llikelyhood(self,g,D,C):
+    def llikelyhood(self,g,C,D):
         '''log likelyhood'''
         total = 0
         for Cs,Ds in zip(C,D) : 
