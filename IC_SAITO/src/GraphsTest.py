@@ -120,6 +120,8 @@ def generateGraphs():
         nx.draw_networkx(g,with_labels=False,node_size=30)
         plt.savefig(DATA_PATH+t+'_g')
         plt.show()
+        
+    #return {"bara" : bara_dok}
     return dict(zip(graphs_titles,graphs_dok))
 
 def launch_test(models,graph_dict,nbCascades,metrics):
@@ -160,7 +162,7 @@ def main():
     models=  [IC_EM_Saito2008(),
               IC_EM_NotContiguous()]
     graph_dict = generateGraphs()
-    launch_test(models,graph_dict,500,metrics)
+    launch_test(models,graph_dict,1500,metrics)
    
     print("End \nTest duration : " ,time.time()-start_time)
 

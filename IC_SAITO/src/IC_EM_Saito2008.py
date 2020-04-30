@@ -10,7 +10,7 @@ from scipy.sparse import dok_matrix
 
 class IC_EM_Saito2008(BaseEstimator):
     
-    def __init__(self,nodes=[0],threshold = 10**(-1)):
+    def __init__(self,nodes=[0],threshold = 10**(-2)):
         self.nodes = nodes
         self.threshold=threshold
         
@@ -18,7 +18,7 @@ class IC_EM_Saito2008(BaseEstimator):
         D = [csc.CascadeToTimeRepr(c) for c in C]
         self.EM_IC(C,D)
         
-    def set_params(self,nodes,threshold = 10**(-1)):
+    def set_params(self,nodes,threshold = 10**(-2)):
         self.threshold=threshold
         self.nodes = nodes
     
@@ -42,14 +42,12 @@ class IC_EM_Saito2008(BaseEstimator):
             p_sw = self.Expectation(self.graph,D,C)
             next_g = self.Maximisation(self.graph,D_plus_id,D_minus_len,p_sw)
             loop = Metrics.SSE(self.graph,next_g)  > self.threshold
-            #print(change)
             self.graph = next_g
             if debug : 
                 new_ll = self.llikelyhood(self.graph,C,D)
                 if new_ll < ll : 
                     raise Exception(f"Likelyhood Error : descreasing : from {ll} to {new_ll}")
                 ll = new_ll
-        #print("ll: ",ll)
         return self.graph
 
     def Expectation(self,g,D,C):

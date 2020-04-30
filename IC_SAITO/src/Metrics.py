@@ -38,7 +38,7 @@ def Pws_gs(graph,sources,nbEpisode=500):
 def AP(U_d,DsNodeSet):
     '''Average Precision pour un episode Ds '''
     ap =0
-    tp = 0
+    tp = 0 # true positive
     for i,node in enumerate(U_d) : 
         if (node in DsNodeSet):
             tp+=1
