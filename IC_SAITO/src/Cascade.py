@@ -6,6 +6,7 @@
 """
 import numpy as np
 import copy
+from collections.abc import Iterable   
 
 def genCascades(graph,nbCascades):
     '''
@@ -24,23 +25,24 @@ def genCascades(graph,nbCascades):
     return cascades
 
 
-def genCascade(graph,startNode,startTime=0):
+def genCascade(graph,sources,start_time = 0):
     '''
     Receive Sparse Matrix graph and starting infected node generate a cascade
     Parameters
     ----------
     graph : dok_matrix
         Graph from wich to generate cascades
-    startNode : TYPE
-        Id of first infected node
-    startTime : TYPE, optional
-        Time at wich the first infection occurs. The default is 0.
+    sources : array of node or node
+            {node : time} or node
     Returns dictionnary of {infectedNode : infectedTime}
     '''
-    cascade = {startNode : startTime}
-    lastInfected = [startNode]
+    if not isinstance(sources, Iterable):
+        sources = [sources]
+    cascade = {s:start_time for s in sources }
+    lastInfected = [s for s in cascade.keys()]
+    
     infected_next = {}
-    time = startTime+1
+    time = start_time+1
     while len(lastInfected)> 0:
         for infected in lastInfected:
             for (_,child),pct in graph[infected,:].items():
