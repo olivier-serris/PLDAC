@@ -1,7 +1,6 @@
 from IC_EM_Saito2008 import IC_EM_Saito2008
 from IC_EM_NotContiguous import IC_EM_NotContiguous
 import Cascade as csc
-import scipy
 from scipy.sparse import dok_matrix
 from sklearn.model_selection import cross_validate 
 import numpy as np
@@ -10,13 +9,13 @@ import pandas as pd
 import pprint as pp
 from networkx import nx
 import GraphGen as GGen
+import matplotlib.pyplot as plt
+import time
 
-
-
-def CrossVal_MAP(model,D):
-    return Metrics.MAP(model.graph,D)
+DATA_PATH = '../data/eval/'
 
 def handmadeGraphTest():
+    '''' Test de performance avec graph fait main '''
     handmadeGraph=dok_matrix((5,5),dtype=np.float32)
     handmadeGraph[0,1] =0.5
     handmadeGraph[0,2] =0.5
@@ -26,68 +25,149 @@ def handmadeGraphTest():
     
     cascades = csc.genCascades(handmadeGraph,50)
     D = [csc.CascadeToTimeRepr(c) for c in cascades]
+    CrossVal_MAP = lambda model,D : Metrics.MAP(model.graph,D)
 
     models= [IC_EM_Saito2008(),IC_EM_NotContiguous()]
     scores = dict()
     for i,model in enumerate(models):
+        model.set_params(csc.nodes_in_D(D))
         cross_res = cross_validate(model,D,scoring=CrossVal_MAP)
         scores[str(model)] = cross_res['test_score'].mean()
     print("score for handmadegraph")
     scores["original"] = Metrics.MAP(handmadeGraph,D)
     pp.pprint(scores)
-    
 
-def ScoresGraphModels(graphs,graphs_titles,models):
-    scores = dict()
-    for g,t in zip(graphs,graphs_titles) : 
-        cascades = csc.genCascades(g,40)
-        D = [csc.CascadeToTimeRepr(c) for c in cascades]
-        scores[t] = dict()
+def saveCscadesDistrib(Cascades,t):
+    '''Sauvegarde la distribution de longeur de cascades sous forme d'histogramme'''
+    lens = np.array([len(c) for c in Cascades])
+    plt.hist(lens,bins= max(lens))
+    plt.title(t)
+    plt.savefig(DATA_PATH+t+'_csc')
+    plt.show()
+
+def ScoresGraphModels(graph_dict,models,metrics,nbCascades,removed_pct_list):
+    indicators = list(metrics.keys())+['fit_time']
+    data = {m:{str(g_t):dict() for g_t in graph_dict.keys()} for m in indicators}
+    curves = {m:{str(g_t):dict() for g_t in graph_dict.keys()} for m in indicators}
+    
+    for gtitle,g in graph_dict.items() : 
+        cascades = csc.genCascades(g,nbCascades)
+        saveCscadesDistrib(cascades,gtitle)
+        nodesInG = np.arange(g.shape[0]).astype(int)
+        partial_cascades = [csc.remove_Xpct_users(nodesInG,cascades,pct) 
+                            for pct in removed_pct_list]
+
         for model in models: 
-            print("for :",t,str(model))
-            model.set_params(csc.nodes_in_D(D))
-            #'''
-            cross_res = cross_validate(model,D,scoring=CrossVal_MAP)
-            scores[t][str(model)] = cross_res['test_score'].mean()
-            print(cross_res)
-            '''
-            model.fit(D)
-            print(str(model),"fitted")
-            scores[t][str(model)] = Metrics.MAP(model.graph,D)
-            print(str(model),f"score:{scores[t][str(model)]}")
-            '''
-        scores[t]["original"] = Metrics.MAP(g,D)
+            model.set_params(nodesInG)
+            print("\nfor :",gtitle,str(model))
+            res = evaluateModelCurve(model,g,metrics,cascades,partial_cascades)
+            for metric,r in res.items():
+                data[metric][gtitle][str(model)] = r[0]
+                curves[metric][gtitle][str(model)] = r
+        if ("MAP" in metrics.keys()):
+            data["MAP"][gtitle]["original"] = Metrics.MAP(g,cascades)
+    dfs = [pd.DataFrame(data[m]) for m in indicators]
+    for df,m in zip(dfs,indicators):
+        df.columns.name = m
+    return dfs,curves
+
+def evaluateModel(model,g,C,original_cascades,metrics):
+    ''' return res of cross validation for model g wit data D and metrics
+        the result is a dict  {metric_name : metric_result}'''
+    start_time = time.time()
+    model.fit(C)
+    fit_time =  time.time()-start_time
+    scores = {label:metric(model,original_cascades,g) for (label, metric) in metrics.items()}
+    scores['fit_time'] =fit_time
+    print(scores)
+    return scores
+
+def evaluateModelCurve(model,g,metrics,original_cascades,partial_cascades):
+    data = {m:np.zeros(len(partial_cascades)) for m in metrics.keys()}
+    data['fit_time'] = np.zeros(len(partial_cascades))
+    for i,partial_cascade in enumerate(partial_cascades):
+        scores_dict = evaluateModel(model,g,partial_cascade,original_cascades,metrics)
+        for (metric,res) in scores_dict.items():
+            data[metric][i] = res
+    return data
+
+
+def generateGraphs():
+    nx_to_dok_rand = lambda g : GGen.randomize_edges_values(
+                                    dok_matrix(nx.to_scipy_sparse_matrix(g)))
     
-    return pd.DataFrame(scores)
+    scale_free = nx.scale_free_graph(100)
+    scale_free_dok = nx_to_dok_rand(scale_free)
+    
+    erdos_renyi = nx.erdos_renyi_graph(100,p=0.02)
+    erdos_renyi_dok= nx_to_dok_rand(erdos_renyi)
+    
+    connected_cave_man = nx.connected_caveman_graph(12,6)
+    connected_cave_man_dok= nx_to_dok_rand(connected_cave_man)
+    
+    bara = nx.barabasi_albert_graph(50,2)
+    bara_dok = nx_to_dok_rand(bara)
 
+    graphs =[scale_free,erdos_renyi,connected_cave_man,bara]
+    graphs_dok = [scale_free_dok, erdos_renyi_dok,
+                  connected_cave_man_dok, bara_dok]
+    
+    graphs_titles = [f"scale_free",  f"erdos_renyi",
+                     f"connected_cave_man", f"barabasi"]
+    # Save network graphs 
+    for g,dok,t in zip(graphs,graphs_dok,graphs_titles) : 
+        plt.title(t+f"{dok.shape[0]}") 
+        nx.draw_networkx(g,with_labels=False,node_size=30)
+        plt.savefig(DATA_PATH+t+'_g')
+        plt.show()
+        
+    #return {"bara" : bara_dok}
+    return dict(zip(graphs_titles,graphs_dok))
 
+def launch_test(models,graph_dict,nbCascades,metrics):
+
+    removed_pct_list = np.linspace(0,1,11)
+    # train and test     
+    dfs,curves = ScoresGraphModels(graph_dict,models,metrics,nbCascades,removed_pct_list)
+        
+    # save perfs :
+    pd.set_option('display.max_columns', len(graph_dict))
+    for df in dfs:
+        print(f"perf :\n{df}")
+        with open(DATA_PATH+df.columns.name+".md","w") as f:
+            f.write(df.to_markdown())
+            
+    # save perf curves with missing data 
+    for model in models:
+        for metric in metrics.keys():            
+            plt.figure()
+            plt.title(f'Perf for {str(model)}_{metric}')
+            for gtitle in graph_dict.keys():
+                c = curves[metric][gtitle][str(model)]
+                plt.plot(removed_pct_list,c,label=gtitle)
+            plt.legend()
+            plt.xlabel('% of infections removed')
+            plt.ylabel(f'{metric}_score')
+            plt.savefig(f'{DATA_PATH}{str(model)}_{metric}.png')
+            plt.show()
+            
 def main():
-    print("start")
-    #handmadeGraphTest()
+    print("start : ")
     
-    scale_free = dok_matrix(nx.to_scipy_sparse_matrix(nx.scale_free_graph(100)))
-    scale_free = GGen.randomize_edges_values(scale_free)
-    sparseGraph = dok_matrix(scipy.sparse.random(30,30,density=0.05))
-    
-    connected_cave_man = dok_matrix(nx.to_scipy_sparse_matrix(nx.connected_caveman_graph(10,5)))
-    connected_cave_man= GGen.randomize_edges_values(connected_cave_man)
-    
-    bara = dok_matrix(nx.to_scipy_sparse_matrix(nx.barabasi_albert_graph(50,2,seed=1)))
-    bara = GGen.randomize_edges_values(bara)
+    start_time = time.time()
+    metrics = { 'MSE':(lambda model,C,g : Metrics.MSE(g, model.graph)),
+                #'MAE':(lambda model,D,g : Metrics.MAE(g, model.graph)),
+                'MAP':(lambda model,C,g : Metrics.MAP(model.graph,C)),
+               }
+    models=  [IC_EM_Saito2008(),
+              IC_EM_NotContiguous()]
+    graph_dict = generateGraphs()
+    launch_test(models,graph_dict,1500,metrics)
+   
+    print("End \nTest duration : " ,time.time()-start_time)
 
-    
-    graphs = [scale_free,sparseGraph,connected_cave_man,bara]
-    graphs_titles = [f"scale_free_{scale_free.shape}",
-                     f"sparseG_{sparseGraph.shape}",
-                     f"connected_cave_man",
-                     f"barabasi {bara.shape}"]
-    
-    models=  [IC_EM_NotContiguous(),IC_EM_Saito2008()]
-    df = ScoresGraphModels(graphs,graphs_titles,models)
-    pd.set_option('display.max_columns', len(graphs))
-    print(df)
-    print("end")
-    
+            
 
 if __name__ == "__main__":
     main()
+   

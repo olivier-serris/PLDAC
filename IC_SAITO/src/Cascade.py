@@ -5,6 +5,8 @@
     --> Cascade filtering
 """
 import numpy as np
+import copy
+from collections.abc import Iterable   
 
 def genCascades(graph,nbCascades):
     '''
@@ -23,23 +25,24 @@ def genCascades(graph,nbCascades):
     return cascades
 
 
-def genCascade(graph,startNode,startTime=0):
+def genCascade(graph,sources,start_time = 0):
     '''
     Receive Sparse Matrix graph and starting infected node generate a cascade
     Parameters
     ----------
     graph : dok_matrix
         Graph from wich to generate cascades
-    startNode : TYPE
-        Id of first infected node
-    startTime : TYPE, optional
-        Time at wich the first infection occurs. The default is 0.
+    sources : array of node or node
+            {node : time} or node
     Returns dictionnary of {infectedNode : infectedTime}
     '''
-    cascade = {startNode : startTime}
-    lastInfected = [startNode]
+    if not isinstance(sources, Iterable):
+        sources = [sources]
+    cascade = {s:start_time for s in sources }
+    lastInfected = [s for s in cascade.keys()]
+    
     infected_next = {}
-    time = startTime+1
+    time = start_time+1
     while len(lastInfected)> 0:
         for infected in lastInfected:
             for (_,child),pct in graph[infected,:].items():
@@ -91,101 +94,103 @@ def nodes_in_D(D):
     return np.unique([n for Ds in D 
                         for nodes in Ds 
                         for n in nodes])
+
+def firstInfected_D(Ds):
+    for nodes in Ds: 
+        if (nodes):
+            return nodes[0]
+    raise Exception("Empty Cascade")
+        
 def sortDbySource(D):
-    'Sort cascades repr by source (first infecteed node)'
-    return sorted(D, key = lambda Ds:Ds[0][0])
+    'Sort cascades repr by source (first infected node)'
+    return sorted(D, key = lambda Ds:firstInfected_D(Ds))
+
+def sortCbySource(C):
+    'Sort cascades repr by source (first infected node)'
+    return sorted(C, key = lambda c: min(c, key=c.get))
+
+def remove_xpct_infections(C, pct):
+    assert 0 <= pct <=1
+    ''' Returns a copy of all cascades from database from which @pct of the observable infections has been removed.'''
+    infection_ids = np.array([[i,n_i] for i,c_i in enumerate(C)
+                                        for n_i in c_i.keys()])
+    np.random.shuffle(infection_ids)
+    to_remove = infection_ids[:int(pct*len(infection_ids))]
+    new_C = copy.deepcopy(C)
+    for (c_i,n_i) in to_remove:
+        new_C[c_i].pop(n_i)
+    new_C = list(filter(bool,new_C))
+    return new_C
+
+def remove_Xpct_users(nodes,C,pct):
+    ''' Returns a copy of all cascades from database from each cascades, @pct of the user are randomly selected and removed'''
+    assert 0 <= pct <=1
+    new_C = copy.deepcopy(C)
+    for c in new_C:
+         nbNodeToRemove = int(round(len(nodes)*pct))
+         to_remove = np.random.choice(nodes, size=nbNodeToRemove,replace = False)
+         for node in to_remove : 
+             if node in c:
+                 del c[node]
+    new_C = list(filter(bool,new_C))
+    return new_C
     
 
 def nodes_in_cascades(C):
     return np.fromiter(set().union(*[set(c.keys()) for c in C]),dtype=int)
 
-
-def Episode_Where_Tu_precedes_Tv(D,u,v):
+def Episode_Where_Tu_precedes_Tv(C,u,v):
     '''
     Returns all episode id where t_u=t_v+1 
     Parameters
     ----------
-    D : Array
-        Containes All Ds (timed representation of cascades)
+    C : Array
+        Containes All cascades
     u : Node
     v : Node
     Returns Array of episodes ids
     '''
-    D_plus = []
-    for i,Ds in enumerate(D): 
-        for t in range(1,len(Ds)):
-            if (u in Ds[t-1] and v in Ds[t]):
-                D_plus.append(i)
-                break
-    return D_plus
+    return [i for i,cascade in enumerate(C) 
+                if u in cascade and v in cascade and cascade[u] == cascade[v]-1]
 
-def NbEpisode_Where_Tu_Not_precedes_Tv(D,u,v):
+def NbEpisode_Where_Tu_Not_precedes_Tv(C,u,v):
     '''
-    Return Cardinal of the set of epsiodes (Ds) where node v is in episode and not(t_u=t_v+1) 
+    Return Cardinal of the set of cascades  where node u is in episode and not(t_u=t_v+1) 
     Parameters
     ----------
-    D : Array
-        Containes All Ds (timed representation of cascades)
+    C : Array
+        Containes All cascades
     u : Node
     v : Node
     Returns Array of episodes ids
     '''
-    D_minus_len=0
-    for Ds in D : 
-        for t in range(1,len(Ds)):
-            if (u in Ds[t-1] and v not in Ds[t]):
-                D_minus_len+=1
-                break
-        if (u in Ds[-1]):
-            D_minus_len+=1
-    return D_minus_len
+    return sum (u in cascade and ( v not in cascade or (cascade[v] > cascade[u]+1))
+                    for cascade in C)
 
-
-def Episode_Where_Tu_ancestor_Tv(D,u,v):
+def Episode_Where_Tu_ancestor_Tv(C,u,v):
     '''
-    Returns all episode id where t_u<t_v 
+    Returns all casacdes id where t_u<t_v 
     Parameters
     ----------
-    D : Array
-        Containes All Ds (timed representation of cascades)
+    C : Array
+        Containes All cascades
     u : Node
     v : Node
     Returns Array of episodes ids
     '''
-    D_plus = []
-    
-    for i,Ds in enumerate(D) : 
-        preceding_nodes = []
-        for t in range(0,len(Ds)):
-            if (v in Ds[t]):
-                if (u in preceding_nodes):
-                    D_plus.append(i)
-                    break
-            else : 
-                preceding_nodes +=Ds[t]
-    return D_plus
+    return [i for i,cascade in enumerate(C) 
+                if u in cascade and v in cascade and cascade[u] < cascade[v]]
 
-def NbEpisode_Where_Tu_Not_ancestor_Tv(D,u,v):
+def NbEpisode_With_u_and_not_v(C,u,v):
     '''
-    Returns number of epsiodes where : node v is in episode and not(t_u<t_v) 
+    Returns number of epsiodes where : node u is in episode and not V 
     Parameters
     ----------
-    D : Array
-        Containes All Ds (timed representation of cascades)
+    C : Array
+        Containes All cascades
     u : Node
     v : Node
     Returns Array of episodes ids
     '''
-    D_minus_len = 0
-    for Ds in D : 
-        u_in_Ds = False
-        v_in_Ds = False
-        for t in range(0,len(Ds)):
-            if (u in Ds[t]):
-                u_in_Ds = True
-            if (u_in_Ds and v in Ds[t]):
-                v_in_Ds = True
-                break
-        if (u_in_Ds and not v_in_Ds):
-            D_minus_len+=1
-    return D_minus_len
+    return sum(u in cascade and v not in cascade 
+               for cascade in C)
